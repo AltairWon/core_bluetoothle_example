@@ -13,7 +13,7 @@ class CentralViewController: UIViewController {
     // UIViewController overrides, properties specific to this class, private helper methods, etc.
 
     @IBOutlet var textView: UITextView!
-
+//    private var temp: String?
     var centralManager: CBCentralManager!
 
     var discoveredPeripheral: CBPeripheral?
@@ -108,8 +108,8 @@ class CentralViewController: UIViewController {
 			data.copyBytes(to: &rawPacket, count: bytesToCopy)
             let packetData = Data(bytes: &rawPacket, count: bytesToCopy)
 			
-			let stringFromData = String(data: packetData, encoding: .utf8)
-			os_log("Writing %d bytes: %s", bytesToCopy, String(describing: stringFromData))
+            let stringFromData = String(data: packetData, encoding: String.Encoding.utf8)
+			print("Writing \(bytesToCopy) bytes : \(stringFromData ?? "")")
 			
             discoveredPeripheral.writeValue(packetData, for: transferCharacteristic, type: .withoutResponse)
             
@@ -317,6 +317,7 @@ extension CentralViewController: CBPeripheralDelegate {
     /*
      *   This callback lets us know more data has arrived via notification on the characteristic
      */
+    
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         // Deal with errors (if any)
         if let error = error {
@@ -325,19 +326,20 @@ extension CentralViewController: CBPeripheralDelegate {
             return
         }
         
-        guard let characteristicData = characteristic.value,
-            let stringFromData = String(data: characteristicData, encoding: .utf8) else { return }
+        guard let characteristicData = characteristic.value else { return }
+            let temp = String(data: characteristicData, encoding: .utf8) ?? ""
         
-        os_log("Received %d bytes: %s", characteristicData.count, stringFromData)
+        os_log("Received %d bytes: %s", characteristicData.count, temp)
         
         // Have we received the end-of-message token?
-        if stringFromData == "EOM" {
+        if temp == "EOM" {
             // End-of-message case: show the data.
             // Dispatch the text view update to the main queue for updating the UI, because
             // we don't know which thread this method will be called back on.
-            DispatchQueue.main.async() {
-                self.textView.text = String(data: self.data, encoding: .utf8)
-            }
+            
+//            DispatchQueue.main.sync() {
+                self.textView.text = temp
+//            }
             
             // Write test data
             writeData()

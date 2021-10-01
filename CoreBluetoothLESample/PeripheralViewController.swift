@@ -8,17 +8,29 @@ A class to advertise, send notifications and receive data from central looking f
 import UIKit
 import CoreBluetooth
 import os
-
-class PeripheralViewController: UIViewController {
+ 
+class PeripheralViewController: UIViewController, FileManagerDelegate {
+    
+//    var a: Optional<Int> = .none
+//    var a: Int? = nil
 
     @IBOutlet var textView: UITextView!
     @IBOutlet var advertisingSwitch: UISwitch!
+    
+//    let file1Name = "EPM-WSH-32289"
+//    let fileData = Bundle.main.path(forResource: file1Name, ofType: "eaui")
+    
+//    let fileManager = FileManager.default
+//    let url: URL? = nil
+//
+//    var fileData = FileManager.default.contents(atPath: "CoreBluetoothLESample/fileFolder/EPM-WSH-32289.eaui")
     
     var peripheralManager: CBPeripheralManager!
 
     var transferCharacteristic: CBMutableCharacteristic?
     var connectedCentral: CBCentral?
-    var dataToSend = Data()
+//    var a: Int? = .some(4)
+    var dataToSend: Data = Data()
     var sendDataIndex: Int = 0
     
     // MARK: - View Lifecycle
@@ -26,7 +38,15 @@ class PeripheralViewController: UIViewController {
     override func viewDidLoad() {
         peripheralManager = CBPeripheralManager(delegate: self, queue: nil, options: [CBPeripheralManagerOptionShowPowerAlertKey: true])
         super.viewDidLoad()
-
+//        if let a = a {
+//            b(arg1: a)
+//        } else {
+//
+//        }
+    }
+    
+    func b(arg1: Int) {
+        return
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -63,7 +83,7 @@ class PeripheralViewController: UIViewController {
         // First up, check if we're meant to be sending an EOM
         if PeripheralViewController.sendingEOM {
             // send it
-            let didSend = peripheralManager.updateValue("EOM".data(using: .utf8)!, for: transferCharacteristic, onSubscribedCentrals: nil)
+            let didSend = peripheralManager.updateValue("EOM".data(using: String.Encoding.utf8)!, for: transferCharacteristic, onSubscribedCentrals: nil)
             // Did it send?
             if didSend {
                 // It did, so mark it as sent
@@ -87,9 +107,11 @@ class PeripheralViewController: UIViewController {
             
             // Work out how big it should be
             var amountToSend = dataToSend.count - sendDataIndex
-            if let mtu = connectedCentral?.maximumUpdateValueLength {
-                amountToSend = min(amountToSend, mtu)
-            }
+//            if let mtu = connectedCentral?.maximumUpdateValueLength {
+//                amountToSend = min(amountToSend, mtu)
+//            }
+            
+            amountToSend = min(amountToSend, 32)
             
             // Copy out the data we want
             let chunk = dataToSend.subdata(in: sendDataIndex..<(sendDataIndex + amountToSend))
@@ -115,7 +137,7 @@ class PeripheralViewController: UIViewController {
                 PeripheralViewController.sendingEOM = true
                 
                 //Send it
-                let eomSent = peripheralManager.updateValue("EOM".data(using: .utf8)!,
+                let eomSent = peripheralManager.updateValue("EOM".data(using: String.Encoding.utf8)!,
                                                              for: transferCharacteristic, onSubscribedCentrals: nil)
                 
                 if eomSent {
@@ -217,8 +239,31 @@ extension PeripheralViewController: CBPeripheralManagerDelegate {
     func peripheralManager(_ peripheral: CBPeripheralManager, central: CBCentral, didSubscribeTo characteristic: CBCharacteristic) {
         os_log("Central subscribed to characteristic")
         
-        // Get the data
-        dataToSend = textView.text.data(using: .utf8)!
+//         Get the data
+//        dataToSend = textView.text.data(using: .utf8)!
+//        path를 잘못 넣은 경우
+//        guard fileData != nil else { return }
+//        dataToSend = fileData!
+        
+        
+//        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+//
+//        let fileName = "CoreBluetoothLESample/fileFolder/EPM-WSH-32289.eaui"
+//        let fileURL = documentsDirectory.appendingPathComponent(fileName)
+//
+//        do {
+//            let fileData = try Data(contentsOf: fileURL)
+//            dataToSend = fileData
+//
+//        } catch let error as NSError {
+//            print ("Error access directory: \(error)")
+//        }
+        
+//        let fileName = "fileName"
+        
+        let filePath = Bundle.main.path(forResource: "fileName", ofType: nil)!
+        
+        dataToSend = (try? Data(contentsOf: URL(fileURLWithPath: filePath)))!
         
         // Reset the index
         sendDataIndex = 0
@@ -228,6 +273,7 @@ extension PeripheralViewController: CBPeripheralManagerDelegate {
         
         // Start sending
         sendData()
+        os_log("Start Sending")
     }
     
     /*
