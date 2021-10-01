@@ -1,3 +1,8 @@
+# Core Blutooth Example
+
+This is the example about how to use Apple Core BluetoothLE Sample core.
+I just use this for sending and reading files
+
 # Transferring Data Between Bluetooth Low Energy Devices
 
 Create a Bluetooth low energy central and peripheral device, and allow them to discover each other and exchange data.
